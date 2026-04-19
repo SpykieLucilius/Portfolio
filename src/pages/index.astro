@@ -1,11 +1,52 @@
 ---
-import Welcome from '../components/Welcome.astro';
 import Layout from '../layouts/Layout.astro';
+import Navbar from '../components/navbar/Navbar.astro';
+import CategoryCard from '../components/category/CategoryCard.astro';
 
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+const categories = [
+	{ title: 'Game Development', image: '/images/game-development.jpg' },
+	{ title: 'Art', image: '/images/art.jpg' },
+	{ title: '3D Models', image: '/images/3d-models.jpg' },
+	{ title: 'Cyber Security', image: '/images/cyber-security.jpg' },
+	{ title: 'Programming', image: '/images/programming.jpg' },
+	{ title: 'Other', image: '/images/other.jpg' }
+];
 ---
 
 <Layout>
-	<Welcome />
+	<Navbar />
+	<section class="categories">
+		<h2 class="title">
+			MY PROJECTS
+		</h2>
+
+		<div class="categoryGrid">
+			{categories.map((cat) => (
+				<CategoryCard 
+				title={cat.title} 
+				image={cat.image} 
+				/>
+			))}
+		</div>
+	</section>
 </Layout>
+
+<style>
+
+	@reference "../styles/global.css";
+
+	.categories {
+        @apply flex flex-col flex-1 mt-4 pb-6 w-11/12 mx-auto;
+    }
+
+    .title {
+        @apply text-black text-2xl font-bold mb-4 ;
+		font-size: 200%;
+		font-family: "Roboto Mono", monospace;
+	}
+
+    .categoryGrid {
+        @apply flex flex-row gap-4 flex-1 w-full;
+    }
+
+</style>

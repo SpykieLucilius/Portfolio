@@ -1,0 +1,102 @@
+---
+
+---
+<div class="navbar-container">
+    <nav class="navbar">
+        <ul class="navbar-list">
+            <li><a href="/">HOME</a></li>
+            <li><a href="/about">ABOUT</a></li>
+            <li><a href="/projects">PROJECTS</a>
+                <ul class="dropdown">
+                    <li><a href="/projects/games">GAMES</a></li>
+                    <li><a href="/projects/art">ART</a></li>
+                    <li><a href="/projects/models">3D MODELS</a></li>
+                    <li><a href="/projects/security">CYBER SECURITY</a></li>
+                    <li><a href="/projects/programming">PROGRAMMING</a></li>
+                    <li><a href="/projects/other">OTHER</a></li>
+                </ul>
+            </li>
+            <li><a href="/contact">CONTACT</a></li>
+        </ul>
+    </nav>
+</div>
+
+<style>
+    @reference "../../styles/global.css";
+
+    .navbar-container {
+        @apply 
+        w-11/12
+        mx-auto 
+        flex 
+        justify-center
+        mt-4
+        relative
+         z-50;
+    }
+
+    .navbar {
+        @apply 
+        bg-gray-900 
+        rounded-2xl
+        text-white 
+        p-2
+        w-full;
+    }
+
+    .navbar-list {
+        @apply 
+        bg-gray-900 
+        text-white 
+        p-4 
+        flex 
+        space-x-8;
+        justify-content: center;
+    }
+
+    .navbar-list li {
+        @apply 
+        relative;
+        list-style-type: none;
+    }
+
+    .navbar-list li a {
+        @apply 
+        text-white 
+        hover:text-gray-400;
+        font-family: 'Roboto Mono', monospace;
+        font-size: 125%;
+        text-decoration: none;
+    }
+
+    .dropdown {
+        @apply 
+        rounded-2xl
+        absolute 
+        left-0 
+        bg-gray-900 
+        text-white 
+        p-4
+        hidden
+        z-50;
+    }
+
+    .dropdown li {
+        @apply 
+        mb-2;
+    }
+
+    .dropdown li a {
+        @apply 
+        text-white 
+        hover:text-gray-400;
+        font-family: 'Roboto Mono', monospace;
+        font-size: 100%;
+        text-decoration: none;
+    }
+
+    .navbar-list li:hover .dropdown {
+        @apply 
+        block;
+    }
+</style>
