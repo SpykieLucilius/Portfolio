@@ -1,7 +1,7 @@
 ---
 
 ---
-<dir>
+<div class="navbar-container">
     <nav class="navbar">
         <ul class="navbar-list">
             <li><a href="/">Home</a></li>
@@ -19,4 +19,72 @@
             <li><a href="/contact">Contact</a></li>
         </ul>
     </nav>
-</dir>
+</div>
+
+<style>
+    @reference "../../styles/global.css";
+
+    .navbar-container {
+        @apply 
+        w-11/12
+        max-w-4xl
+        mx-auto 
+        flex 
+        justify-center
+        mt-4;
+    }
+
+    .navbar {
+        @apply 
+        bg-gray-900 
+        rounded-2xl
+        text-white 
+        p-2
+        w-full;
+    }
+
+    .navbar-list {
+        @apply 
+        bg-gray-900 
+        text-white 
+        p-4 
+        flex 
+        space-x-6;
+        justify-content: center;
+    }
+
+    .navbar-list li {
+        @apply 
+        relative;
+        list-style-type: none;
+    }
+
+    .navbar-list li a {
+        @apply 
+        text-white 
+        hover:text-gray-400;
+        font-family: 'Roboto Mono', monospace;
+        text-decoration: none;
+    }
+
+    .dropdown {
+        @apply 
+        rounded-2xl
+        absolute 
+        left-0 
+        bg-gray-900 
+        text-white 
+        p-4
+        hidden;
+    }
+
+    .dropdown li {
+        @apply 
+        mb-2;
+    }
+
+    .navbar-list li:hover .dropdown {
+        @apply 
+        block;
+    }
+</style>
