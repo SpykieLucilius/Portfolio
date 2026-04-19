@@ -2,12 +2,13 @@
 interface Props {
   title: string;
   image?: string;
+  link?: string;
 }
 
-const { title, image } = Astro.props;
+const { title, image, link } = Astro.props;
 ---
 
-<a href="#" class="category-card">
+<a href={link || '#'} class="category-card">
     <div
         class="category-image"
         style={image ? `background-image: url('${image}')` : ''}
