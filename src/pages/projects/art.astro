@@ -1,9 +1,65 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import Navbar from '../../components/navbar/Navbar.astro';
+import ProjectCard from '../../components/project/ProjectCard.astro';
+
+const artProjects = [
+    {
+        title: "Project 1",
+        description: "Description of project 1.",
+        image: "/path/to/image1.jpg",
+        link: "#"
+    },
+    {
+        title: "Project 2",
+        description: "Description of project 2.",
+        image: "/path/to/image2.jpg",
+        link: "#"
+    },
+    {
+        title: "Project 3",
+        description: "Description of project 3.",
+        image: "/path/to/image3.jpg",
+        link: "#"
+    }
+];
 ---
 
 <Layout>
     <Navbar />
-    <h1>Art</h1>
+    <section class ="gameprojects">
+        <h1 class="Title">
+            Art
+        </h1>
+
+        <div class="projects-grid">
+            {artProjects.map((project) => (
+                <ProjectCard 
+                    title={project.title} 
+                    description={project.description} 
+                    image={project.image} 
+                    link={project.link} 
+                />
+            ))}
+        </div>
+    </section>
 </Layout>
+
+<style>
+    @reference "../../styles/global.css";
+
+    .artprojects {
+        @apply flex flex-col flex-1 mt-4 pb-6 w-11/12 mx-auto;
+    }
+
+    .Title {
+        @apply text-black text-2xl font-bold mb-4;
+        font-size: 200%;
+        font-family: "Roboto Mono", monospace;
+    }
+
+    .projects-grid {
+        @apply grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full; 
+    }
+
+</style>
