@@ -1,0 +1,63 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import { supabaseAdmin } from '../../../lib/supabase';
+
+const { id } = Astro.params;
+if (!id) return Astro.redirect('/admin/projects');
+
+if (Astro.request.method === 'POST') {
+  const form = await Astro.request.formData();
+  const action = form.get('_action');
+
+  if (action === 'delete') {
+    await supabaseAdmin.from('projects').delete().eq('id', id);
+  } else {
+    await supabaseAdmin.from('projects').update({
+      title: form.get('title'),
+      description: form.get('description'),
+      image: form.get('image'),
+      link: form.get('link'),
+      category: form.get('category'),
+      display_order: Number(form.get('display_order')) || 0,
+    }).eq('id', id);
+  }
+
+  return Astro.redirect('/admin/projects');
+}
+
+const { data: project } = await supabaseAdmin
+  .from('projects')
+  .select('*')
+  .eq('id', id)
+  .single();
+
+if (!project) return Astro.redirect('/admin/projects');
+---
+
+<Layout title="Edit Project">
+  <div style="max-width: 600px; margin: 2rem auto; padding: 1rem;">
+    <h1>Edit — {project.title}</h1>
+    <form method="POST">
+      <label>Title <input type="text" name="title" value={project.title} required /></label>
+      <label>Description <textarea name="description">{project.description}</textarea></label>
+      <label>Image URL <input type="text" name="image" value={project.image} /></label>
+      <label>Link <input type="text" name="link" value={project.link} /></label>
+      <label>Category
+        <select name="category" required>
+          {['games','art','models','security','programming','other'].map(c => (
+            <option value={c} selected={project.category === c}>{c}</option>
+          ))}
+        </select>
+      </label>
+      <label>Display order <input type="number" name="display_order" value={project.display_order} /></label>
+      <button type="submit">Save</button>
+    </form>
+
+    <form method="POST" onsubmit="return confirm('Delete this project?')">
+      <input type="hidden" name="_action" value="delete" />
+      <button type="submit" style="color: red; margin-top: 1rem;">Delete project</button>
+    </form>
+
+    <a href="/admin/projects">Cancel</a>
+  </div>
+</Layout>

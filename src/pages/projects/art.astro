@@ -2,27 +2,14 @@
 import Layout from "../../layouts/Layout.astro";
 import Navbar from '../../components/navbar/Navbar.astro';
 import ProjectCard from '../../components/project/ProjectCard.astro';
+import { supabase } from '../../lib/supabase';
 
-const artProjects = [
-    {
-        title: "Project 1",
-        description: "Description of project 1.",
-        image: "/path/to/image1.jpg",
-        link: "#"
-    },
-    {
-        title: "Project 2",
-        description: "Description of project 2.",
-        image: "/path/to/image2.jpg",
-        link: "#"
-    },
-    {
-        title: "Project 3",
-        description: "Description of project 3.",
-        image: "/path/to/image3.jpg",
-        link: "#"
-    }
-];
+const { data } = await supabase
+    .from('projects')
+    .select('*')
+    .eq('category', 'art')
+    .order('display_order');
+const artProjects = data ?? [];
 ---
 
 <Layout>

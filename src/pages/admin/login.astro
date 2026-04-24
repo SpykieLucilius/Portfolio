@@ -1,0 +1,50 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { createClient } from '@supabase/supabase-js';
+
+if (Astro.request.method === 'POST') {
+  const form = await Astro.request.formData();
+  const email = form.get('email') as string;
+  const password = form.get('password') as string;
+
+  const supabase = createClient(
+    import.meta.env.SUPABASE_URL,
+    import.meta.env.SUPABASE_KEY
+  );
+
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+  if (error || !data.session) {
+    return Astro.redirect('/admin/login?error=1');
+  }
+
+  Astro.cookies.set('sb-access-token', data.session.access_token, {
+    path: '/',
+    httpOnly: true,
+    secure: true,
+    maxAge: 60 * 60 * 24,
+  });
+
+  return Astro.redirect('/admin/projects');
+}
+
+const hasError = Astro.url.searchParams.get('error');
+---
+
+<Layout title="Admin Login">
+  <div style="max-width: 400px; margin: 100px auto; padding: 2rem;">
+    <h1>Admin Login</h1>
+    {hasError && <p style="color: red;">Invalid email or password.</p>}
+    <form method="POST">
+      <div>
+        <label>Email</label>
+        <input type="email" name="email" required />
+      </div>
+      <div>
+        <label>Password</label>
+        <input type="password" name="password" required />
+      </div>
+      <button type="submit">Login</button>
+    </form>
+  </div>
+</Layout>

@@ -1,0 +1,42 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import { supabaseAdmin } from '../../../lib/supabase';
+import type { Project } from '../../../types/project';
+
+const { data: projects } = await supabaseAdmin
+  .from('projects')
+  .select('*')
+  .order('category')
+  .order('display_order');
+---
+
+<Layout title="Admin — Projects">
+  <div style="max-width: 900px; margin: 2rem auto; padding: 1rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <h1>Projects</h1>
+      <a href="/admin/projects/new">+ New project</a>
+    </div>
+    <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Category</th>
+          <th>Order</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {projects?.map((p: Project) => (
+          <tr>
+            <td>{p.title}</td>
+            <td>{p.category}</td>
+            <td>{p.display_order}</td>
+            <td>
+              <a href={`/admin/projects/${p.id}`}>Edit / Delete</a>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+</Layout>
