@@ -1,14 +1,33 @@
 ---
 import Layout from '../../../layouts/Layout.astro';
+import Navbar from '../../../components/navbar/Navbar.astro';
 import { supabaseAdmin } from '../../../lib/supabase';
 
 if (Astro.request.method === 'POST') {
   const form = await Astro.request.formData();
 
+  let imageUrl: string | null = null;
+  const imageFile = form.get('image_file') as File;
+
+  if (imageFile && imageFile.size > 0) {
+    const filename = `${Date.now()}-${imageFile.name}`;
+    const buffer = await imageFile.arrayBuffer();
+    const { error: uploadError } = await supabaseAdmin.storage
+      .from('project-images')
+      .upload(filename, buffer, { contentType: imageFile.type });
+
+    if (!uploadError) {
+      const { data: { publicUrl } } = supabaseAdmin.storage
+        .from('project-images')
+        .getPublicUrl(filename);
+      imageUrl = publicUrl;
+    }
+  }
+
   await supabaseAdmin.from('projects').insert({
     title: form.get('title'),
     description: form.get('description'),
-    image: form.get('image'),
+    image: imageUrl,
     link: form.get('link'),
     category: form.get('category'),
     display_order: Number(form.get('display_order')) || 0,
@@ -19,26 +38,128 @@ if (Astro.request.method === 'POST') {
 ---
 
 <Layout title="New Project">
-  <div style="max-width: 600px; margin: 2rem auto; padding: 1rem;">
-    <h1>New Project</h1>
-    <form method="POST">
-      <label>Title <input type="text" name="title" required /></label>
-      <label>Description <textarea name="description"></textarea></label>
-      <label>Image URL <input type="text" name="image" /></label>
-      <label>Link <input type="text" name="link" /></label>
-      <label>Category
-        <select name="category" required>
-          <option value="games">Games</option>
-          <option value="art">Art</option>
-          <option value="models">Models</option>
-          <option value="security">Security</option>
-          <option value="programming">Programming</option>
-          <option value="other">Other</option>
-        </select>
-      </label>
-      <label>Display order <input type="number" name="display_order" value="0" /></label>
-      <button type="submit">Create</button>
-      <a href="/admin/projects">Cancel</a>
-    </form>
-  </div>
+  <Navbar />
+  <section class="admin-section">
+    <div class="admin-header">
+      <h1 class="admin-title">New Project</h1>
+      <a href="/admin/projects" class="btn-cancel">← Back</a>
+    </div>
+
+    <div class="form-card">
+      <form method="POST" enctype="multipart/form-data" class="form">
+        <div class="field">
+          <label class="field-label">Title</label>
+          <input class="field-input" type="text" name="title" required />
+        </div>
+
+        <div class="field">
+          <label class="field-label">Description</label>
+          <textarea class="field-input field-textarea" name="description"></textarea>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Image</label>
+          <input class="field-file" type="file" name="image_file" accept="image/*" />
+        </div>
+
+        <div class="field">
+          <label class="field-label">Link</label>
+          <input class="field-input" type="text" name="link" placeholder="https://" />
+        </div>
+
+        <div class="field">
+          <label class="field-label">Category</label>
+          <select class="field-input" name="category" required>
+            <option value="games">Games</option>
+            <option value="art">Art</option>
+            <option value="models">3D Models</option>
+            <option value="security">Cyber Security</option>
+            <option value="programming">Programming</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Display order</label>
+          <input class="field-input field-short" type="number" name="display_order" value="0" min="0" />
+        </div>
+
+        <div class="form-actions">
+          <button class="btn-primary" type="submit">Create project</button>
+          <a href="/admin/projects" class="btn-cancel">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </section>
 </Layout>
+
+<style>
+  @reference "../../../styles/global.css";
+
+  .admin-section {
+    @apply flex flex-col flex-1 mt-4 pb-6 w-11/12 mx-auto overflow-y-auto;
+  }
+
+  .admin-header {
+    @apply flex items-center justify-between mb-6;
+  }
+
+  .admin-title {
+    @apply text-black font-bold;
+    font-size: 200%;
+    font-family: 'Roboto Mono', monospace;
+  }
+
+  .form-card {
+    @apply bg-gray-900 rounded-2xl p-8;
+  }
+
+  .form {
+    @apply flex flex-col gap-6;
+  }
+
+  .field {
+    @apply flex flex-col gap-2;
+  }
+
+  .field-label {
+    @apply text-gray-400 text-xs uppercase tracking-widest;
+    font-family: 'Roboto Mono', monospace;
+  }
+
+  .field-input {
+    @apply bg-gray-800 text-white rounded-xl px-4 py-3 outline-none border border-gray-700 focus:border-gray-400 transition-colors;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 95%;
+  }
+
+  .field-textarea {
+    @apply resize-none;
+    min-height: 100px;
+  }
+
+  .field-file {
+    @apply text-gray-300 text-sm;
+    font-family: 'Roboto Mono', monospace;
+  }
+
+  .field-short {
+    max-width: 120px;
+  }
+
+  .form-actions {
+    @apply flex items-center gap-4 mt-2;
+  }
+
+  .btn-primary {
+    @apply bg-white text-gray-900 font-bold rounded-xl px-6 py-3 hover:bg-gray-200 transition-colors cursor-pointer;
+    font-family: 'Roboto Mono', monospace;
+  }
+
+  .btn-cancel {
+    @apply text-gray-400 hover:text-white transition-colors;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 90%;
+    text-decoration: none;
+  }
+</style>

@@ -1,42 +1,111 @@
 ---
 import Layout from '../../../layouts/Layout.astro';
+import Navbar from '../../../components/navbar/Navbar.astro';
 import { supabaseAdmin } from '../../../lib/supabase';
 import type { Project } from '../../../types/project';
 
-const { data: projects } = await supabaseAdmin
+const { data } = await supabaseAdmin
   .from('projects')
   .select('*')
   .order('category')
   .order('display_order');
+
+const projects = data ?? [];
 ---
 
 <Layout title="Admin — Projects">
-  <div style="max-width: 900px; margin: 2rem auto; padding: 1rem;">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-      <h1>Projects</h1>
-      <a href="/admin/projects/new">+ New project</a>
+  <Navbar />
+  <section class="admin-section">
+    <div class="admin-header">
+      <h1 class="admin-title">Projects</h1>
+      <a href="/admin/projects/new" class="btn-new">+ New project</a>
     </div>
-    <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
-      <thead>
-        <tr>
-          <th>Title</th>
-          <th>Category</th>
-          <th>Order</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {projects?.map((p: Project) => (
-          <tr>
-            <td>{p.title}</td>
-            <td>{p.category}</td>
-            <td>{p.display_order}</td>
-            <td>
-              <a href={`/admin/projects/${p.id}`}>Edit / Delete</a>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
+
+    {projects.length === 0 && (
+      <div class="empty-state">
+        <p>No projects yet. Add your first one.</p>
+      </div>
+    )}
+
+    <div class="project-list">
+      {projects.map((p: Project) => (
+        <div class="project-row">
+          <div class="project-info">
+            {p.image && <img src={p.image} alt={p.title} class="project-thumb" />}
+            <div>
+              <p class="project-name">{p.title}</p>
+              <p class="project-meta">{p.category} · order {p.display_order}</p>
+            </div>
+          </div>
+          <a href={`/admin/projects/${p.id}`} class="btn-edit">Edit</a>
+        </div>
+      ))}
+    </div>
+  </section>
 </Layout>
+
+<style>
+  @reference "../../../styles/global.css";
+
+  .admin-section {
+    @apply flex flex-col flex-1 mt-4 pb-6 w-11/12 mx-auto overflow-y-auto;
+  }
+
+  .admin-header {
+    @apply flex items-center justify-between mb-6;
+  }
+
+  .admin-title {
+    @apply text-black font-bold;
+    font-size: 200%;
+    font-family: 'Roboto Mono', monospace;
+  }
+
+  .btn-new {
+    @apply bg-gray-900 text-white rounded-xl px-5 py-2 hover:bg-gray-700 transition-colors;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 90%;
+    text-decoration: none;
+  }
+
+  .empty-state {
+    @apply bg-gray-900 rounded-2xl p-10 text-center text-gray-400;
+    font-family: 'Roboto Mono', monospace;
+  }
+
+  .project-list {
+    @apply flex flex-col gap-3;
+  }
+
+  .project-row {
+    @apply bg-gray-900 rounded-2xl px-6 py-4 flex items-center justify-between;
+  }
+
+  .project-info {
+    @apply flex items-center gap-4;
+  }
+
+  .project-thumb {
+    @apply rounded-xl object-cover;
+    width: 56px;
+    height: 56px;
+  }
+
+  .project-name {
+    @apply text-white font-bold m-0;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 100%;
+  }
+
+  .project-meta {
+    @apply text-gray-400 text-xs m-0 mt-1 uppercase tracking-widest;
+    font-family: 'Roboto Mono', monospace;
+  }
+
+  .btn-edit {
+    @apply bg-gray-700 text-white rounded-xl px-4 py-2 hover:bg-gray-600 transition-colors;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 85%;
+    text-decoration: none;
+  }
+</style>
