@@ -2,22 +2,14 @@
 import Layout from "../../layouts/Layout.astro";
 import Navbar from '../../components/navbar/Navbar.astro';
 import ProjectCard from "../../components/project/ProjectCard.astro";
+import { supabase } from '../../lib/supabase';
 
-const games = [
-    {
-        title: "Switch-off Pong",
-        description: "A twist on the classic pong arcade game.",
-        image: "../illustrations/Switch-off-pong-cover.png",
-        link: "/projects/games/game1"
-    },
-    {
-        title: "Space Invaders",
-        description: "A remake of the classic arcade game.",
-        image: "../illustrations/test.png",
-        link: "/projects/games/game2"
-    },
-
-];
+const { data } = await supabase
+    .from('projects')
+    .select('*')
+    .eq('category', 'games')
+    .order('display_order');
+const games = data ?? [];
 ---
 
 <Layout>

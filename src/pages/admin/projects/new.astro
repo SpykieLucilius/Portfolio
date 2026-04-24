@@ -1,0 +1,44 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import { supabaseAdmin } from '../../../lib/supabase';
+
+if (Astro.request.method === 'POST') {
+  const form = await Astro.request.formData();
+
+  await supabaseAdmin.from('projects').insert({
+    title: form.get('title'),
+    description: form.get('description'),
+    image: form.get('image'),
+    link: form.get('link'),
+    category: form.get('category'),
+    display_order: Number(form.get('display_order')) || 0,
+  });
+
+  return Astro.redirect('/admin/projects');
+}
+---
+
+<Layout title="New Project">
+  <div style="max-width: 600px; margin: 2rem auto; padding: 1rem;">
+    <h1>New Project</h1>
+    <form method="POST">
+      <label>Title <input type="text" name="title" required /></label>
+      <label>Description <textarea name="description"></textarea></label>
+      <label>Image URL <input type="text" name="image" /></label>
+      <label>Link <input type="text" name="link" /></label>
+      <label>Category
+        <select name="category" required>
+          <option value="games">Games</option>
+          <option value="art">Art</option>
+          <option value="models">Models</option>
+          <option value="security">Security</option>
+          <option value="programming">Programming</option>
+          <option value="other">Other</option>
+        </select>
+      </label>
+      <label>Display order <input type="number" name="display_order" value="0" /></label>
+      <button type="submit">Create</button>
+      <a href="/admin/projects">Cancel</a>
+    </form>
+  </div>
+</Layout>
