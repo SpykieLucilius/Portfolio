@@ -24,6 +24,24 @@ if (Astro.request.method === 'POST') {
     }
   }
 
+const detailImageFiles = form.getAll('detail_image_files') as File[];
+const detailImageUrls: string[] = [];
+
+for (const file of detailImageFiles) {
+  if (file.size === 0) continue;
+  const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}-${file.name}`;
+  const buffer = await file.arrayBuffer();
+  const { error: uploadError } = await supabaseAdmin.storage
+    .from('project-images')
+    .upload(filename, buffer, { contentType: file.type });
+  if (!uploadError) {
+    const { data: { publicUrl } } = supabaseAdmin.storage
+      .from('project-images')
+      .getPublicUrl(filename);
+    detailImageUrls.push(publicUrl);
+  }
+}
+
   await supabaseAdmin.from('projects').insert({
     title: form.get('title'),
     description: form.get('description'),
@@ -31,6 +49,8 @@ if (Astro.request.method === 'POST') {
     link: form.get('link'),
     category: form.get('category'),
     display_order: Number(form.get('display_order')) || 0,
+    detail_description: form.get('detail_description') || null,
+    detail_images: detailImageUrls
   });
 
   return Astro.redirect('/admin/projects');
@@ -82,6 +102,18 @@ if (Astro.request.method === 'POST') {
         <div class="field">
           <label class="field-label">Display order</label>
           <input class="field-input field-short" type="number" name="display_order" value="0" min="0" />
+        </div>
+        
+        <div class="field">
+          <label class="field-label">Detail Description</label>
+          <textarea class="field-input field-textarea field-textarea-tall" name="detail_description"></textarea>
+          <span class="field-hint">Full description shown on the project detail page.</span>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Gallery Images</label>
+          <input class="field-file" type="file" name="detail_image_files" accept="image/*" multiple />
+          <span class="field-hint">Select multiple files to create a gallery.</span>
         </div>
 
         <div class="form-actions">
@@ -145,6 +177,10 @@ if (Astro.request.method === 'POST') {
 
   .field-short {
     max-width: 120px;
+  }
+
+  .field-textarea-tall {
+  min-height: 200px;
   }
 
   .form-actions {
