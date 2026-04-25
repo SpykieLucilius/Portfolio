@@ -14,7 +14,7 @@ const otherProjects = data ?? [];
 
 <Layout>
     <Navbar />
-    <section class ="gameprojects">
+    <section class ="otherprojects">
         
         <h1 class="Title">
             Other
@@ -37,8 +37,8 @@ const otherProjects = data ?? [];
 <style>
     @reference "../../styles/global.css";
 
-    .gameprojects {
-        @apply flex flex-col flex-1 mt-4 pb-6 w-11/12 mx-auto;
+    .otherprojects {
+        @apply flex flex-col flex-1 mt-4 pb-6 w-11/12 mx-auto overflow-y-auto;
     }
 
     .Title {
