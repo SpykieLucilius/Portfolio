@@ -64,8 +64,13 @@ if (Astro.request.method === 'POST') {
     }
   }
 
-  const existingDetailImages = form.getAll('existing_detail_image') as string[];
-  const finalDetailImages = [...existingDetailImages, ...newDetailUrls];
+  const { data: currentProject } = await supabaseAdmin
+    .from('projects')
+    .select('detail_images')
+    .eq('id', id)
+    .single();
+  const existingImages = currentProject?.detail_images ?? [];
+  const finalDetailImages = [...existingImages, ...newDetailUrls];
 
 
   await supabaseAdmin.from('projects').update({
@@ -98,6 +103,24 @@ if (!project) return Astro.redirect('/admin/projects');
       <h1 class="admin-title">Edit — {project.title}</h1>
       <a href="/admin/projects" class="btn-cancel">← Back</a>
     </div>
+
+    {project.detail_images && project.detail_images.length > 0 && (
+      <div class="gallery-section">
+        <p class="gallery-section-label">Current Gallery</p>
+        <div class="gallery-admin-grid">
+          {project.detail_images.map((url: string) => (
+            <div class="gallery-admin-item">
+              <img src={url} alt="Gallery image" class="gallery-admin-thumb" />
+              <form method="POST" class="remove-img-form" onsubmit="return confirm('Remove this image?')">
+                <input type="hidden" name="_action" value="remove_detail_image" />
+                <input type="hidden" name="image_url" value={url} />
+                <button type="submit" class="btn-remove-img">✕</button>
+              </form>
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
 
     <div class="form-card">
       <form method="POST" enctype="multipart/form-data" class="form">
@@ -147,26 +170,9 @@ if (!project) return Astro.redirect('/admin/projects');
         </div>
 
         <div class="field">
-          <label class="field-label">Gallery Images</label>
-
-          {project.detail_images && project.detail_images.length > 0 && (
-            <div class="gallery-admin-grid">
-              {project.detail_images.map((url: string) => (
-                <div class="gallery-admin-item">
-                  <img src={url} alt="Gallery image" class="gallery-admin-thumb" />
-                  <input type="hidden" name="existing_detail_image" value={url} />
-                  <form method="POST" class="remove-img-form" onsubmit="return confirm('Remove this image?')">
-                    <input type="hidden" name="_action" value="remove_detail_image" />
-                    <input type="hidden" name="image_url" value={url} />
-                    <button type="submit" class="btn-remove-img">✕</button>
-                  </form>
-                </div>
-              ))}
-            </div>
-          )}
-
+          <label class="field-label">Add Gallery Images</label>
           <input class="field-file" type="file" name="detail_image_files" accept="image/*" multiple />
-          <span class="field-hint">Upload new images to append to the gallery. Remove individual images above.</span>
+          <span class="field-hint">New uploads are appended to the gallery above.</span>
         </div>
 
         <div class="form-actions">
@@ -276,6 +282,15 @@ if (!project) return Astro.redirect('/admin/projects');
 
   .field-textarea-tall {
   min-height: 200px;
+  }
+
+  .gallery-section {
+    @apply mb-4;
+  }
+
+  .gallery-section-label {
+    @apply text-gray-400 text-xs uppercase tracking-widest mb-2;
+    font-family: 'Roboto Mono', monospace;
   }
 
   .gallery-admin-grid {
