@@ -23,10 +23,10 @@ const models = data ?? [];
         <div class="projects-grid">
             {models.map(model => (
                 <ProjectCard 
+                    id={model.id}
                     title={model.title} 
                     description={model.description} 
                     image={model.image} 
-                    link={model.link} 
                 />
             ))}
         </div>

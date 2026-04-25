@@ -1,0 +1,125 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Navbar from '../../components/navbar/Navbar.astro';
+import { supabase } from '../../lib/supabase';
+
+const { id } = Astro.params;
+if (!id) return Astro.redirect('/');
+
+const { data: project } = await supabase
+    .from('projects')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+if (!project) return Astro.redirect('/');
+
+const displayDescription = project.detail_description || project.description || null;
+---
+
+<Layout>
+    <Navbar />
+    <section class="detail-section">
+
+        <div class="detail-hero" style={project.image ? `background-image: url('${project.image}')` : ''}>
+            <div class="detail-hero-overlay">
+                <span class="detail-category">{project.category}</span>
+                <h1 class="detail-title">{project.title}</h1>
+            </div>
+        </div>
+
+        <div class="detail-body">
+
+            {project.link && (
+                <a href={project.link} target="_blank" rel="noopener noreferrer" class="btn-visit">
+                    Visit Project →
+                </a>
+            )}
+
+            {displayDescription ? (
+                <p class="detail-description">{displayDescription}</p>
+            ) : (
+                <p class="detail-empty">No description available.</p>
+            )}
+
+            {project.detail_images && project.detail_images.length > 0 && (
+                <div class="detail-gallery">
+                    {project.detail_images.map((url: string) => (
+                        <img src={url} alt={project.title} class="gallery-image" />
+                    ))}
+                </div>
+            )}
+
+        </div>
+
+        <a href={`/projects/${project.category}`} class="btn-back">← Back to {project.category}</a>
+
+    </section>
+</Layout>
+
+<style>
+    @reference "../../styles/global.css";
+
+    .detail-section {
+        @apply flex flex-col flex-1 pb-10 w-11/12 mx-auto;
+    }
+
+    .detail-hero {
+        @apply relative w-full rounded-2xl overflow-hidden bg-gray-900 mt-4;
+        height: 340px;
+        background-size: cover;
+        background-position: center;
+    }
+
+    .detail-hero-overlay {
+        @apply absolute bottom-0 left-0 w-full px-6 pt-16 pb-6;
+        background-image: linear-gradient(to top, #111827 15%, rgba(0,0,0,0) 100%);
+    }
+
+    .detail-category {
+        @apply text-xs text-gray-400 uppercase tracking-widest;
+        font-family: 'Roboto Mono', monospace;
+    }
+
+    .detail-title {
+        @apply text-3xl font-bold uppercase text-white mt-1;
+        font-family: 'Roboto Mono', monospace;
+        letter-spacing: 0.08em;
+        text-shadow: 0 1px 6px rgba(0,0,0,0.8);
+    }
+
+    .detail-body {
+        @apply flex flex-col gap-6 mt-8;
+    }
+
+    .btn-visit {
+        @apply self-start bg-white text-gray-900 font-bold rounded-xl px-6 py-3 hover:bg-gray-200 transition-colors;
+        font-family: 'Roboto Mono', monospace;
+        text-decoration: none;
+    }
+
+    .detail-description {
+        @apply text-gray-700 text-base leading-relaxed whitespace-pre-line;
+        font-family: 'Roboto Mono', monospace;
+        max-width: 72ch;
+    }
+
+    .detail-empty {
+        @apply text-gray-400 text-sm italic;
+        font-family: 'Roboto Mono', monospace;
+    }
+
+    .detail-gallery {
+        @apply grid grid-cols-2 md:grid-cols-3 gap-4;
+    }
+
+    .gallery-image {
+        @apply rounded-2xl object-cover w-full aspect-square;
+    }
+
+    .btn-back {
+        @apply self-start text-gray-500 hover:text-gray-900 transition-colors mt-4 text-sm;
+        font-family: 'Roboto Mono', monospace;
+        text-decoration: none;
+    }
+</style>

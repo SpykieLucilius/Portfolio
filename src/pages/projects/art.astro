@@ -14,7 +14,7 @@ const artProjects = data ?? [];
 
 <Layout>
     <Navbar />
-    <section class ="gameprojects">
+    <section class ="artprojects">
         <h1 class="Title">
             Art
         </h1>
@@ -22,10 +22,10 @@ const artProjects = data ?? [];
         <div class="projects-grid">
             {artProjects.map((project) => (
                 <ProjectCard 
+                    id={project.id}
                     title={project.title} 
                     description={project.description} 
                     image={project.image} 
-                    link={project.link} 
                 />
             ))}
         </div>

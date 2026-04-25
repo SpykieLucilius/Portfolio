@@ -15,6 +15,19 @@ if (Astro.request.method === 'POST') {
     return Astro.redirect('/admin/projects');
   }
 
+  if (action === 'remove_detail_image') {
+    const urlToRemove = form.get('image_url') as string;
+    const { data: current } = await supabaseAdmin
+      .from('projects')
+      .select('detail_images')
+      .eq('id', id)
+      .single();
+    const updated = (current?.detail_images ?? []).filter((u: string) => u !== urlToRemove);
+    await supabaseAdmin.from('projects').update({ detail_images: updated }).eq('id', id);
+    return Astro.redirect(`/admin/projects/${id}`);
+  }
+
+
   let imageUrl = form.get('current_image') as string | null;
   const imageFile = form.get('image_file') as File;
 
@@ -33,6 +46,28 @@ if (Astro.request.method === 'POST') {
     }
   }
 
+  const detailImageFiles = form.getAll('detail_image_files') as File[];
+  const newDetailUrls: string[] = [];
+
+  for (const file of detailImageFiles) {
+    if (file.size === 0) continue;
+    const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}-${file.name}`;
+    const buffer = await file.arrayBuffer();
+    const { error } = await supabaseAdmin.storage
+      .from('project-images')
+      .upload(filename, buffer, { contentType: file.type });
+    if (!error) {
+      const { data: { publicUrl } } = supabaseAdmin.storage
+        .from('project-images')
+        .getPublicUrl(filename);
+      newDetailUrls.push(publicUrl);
+    }
+  }
+
+  const existingDetailImages = form.getAll('existing_detail_image') as string[];
+  const finalDetailImages = [...existingDetailImages, ...newDetailUrls];
+
+
   await supabaseAdmin.from('projects').update({
     title: form.get('title'),
     description: form.get('description'),
@@ -40,6 +75,8 @@ if (Astro.request.method === 'POST') {
     link: form.get('link'),
     category: form.get('category'),
     display_order: Number(form.get('display_order')) || 0,
+    detail_description: form.get('detail_description') || null,
+    detail_images: finalDetailImages,
   }).eq('id', id);
 
   return Astro.redirect('/admin/projects');
@@ -102,6 +139,34 @@ if (!project) return Astro.redirect('/admin/projects');
         <div class="field">
           <label class="field-label">Display order</label>
           <input class="field-input field-short" type="number" name="display_order" value={project.display_order} min="0" />
+        </div>
+
+        <div class="field">
+          <label class="field-label">Detail Description</label>
+          <textarea class="field-input field-textarea field-textarea-tall" name="detail_description">{project.detail_description}</textarea>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Gallery Images</label>
+
+          {project.detail_images && project.detail_images.length > 0 && (
+            <div class="gallery-admin-grid">
+              {project.detail_images.map((url: string) => (
+                <div class="gallery-admin-item">
+                  <img src={url} alt="Gallery image" class="gallery-admin-thumb" />
+                  <input type="hidden" name="existing_detail_image" value={url} />
+                  <form method="POST" class="remove-img-form" onsubmit="return confirm('Remove this image?')">
+                    <input type="hidden" name="_action" value="remove_detail_image" />
+                    <input type="hidden" name="image_url" value={url} />
+                    <button type="submit" class="btn-remove-img">✕</button>
+                  </form>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <input class="field-file" type="file" name="detail_image_files" accept="image/*" multiple />
+          <span class="field-hint">Upload new images to append to the gallery. Remove individual images above.</span>
         </div>
 
         <div class="form-actions">
@@ -208,4 +273,30 @@ if (!project) return Astro.redirect('/admin/projects');
     font-family: 'Roboto Mono', monospace;
     font-size: 90%;
   }
+
+  .field-textarea-tall {
+  min-height: 200px;
+  }
+
+  .gallery-admin-grid {
+    @apply grid grid-cols-3 gap-3 mb-3;
+  }
+
+  .gallery-admin-item {
+    @apply relative;
+  }
+
+  .gallery-admin-thumb {
+    @apply rounded-xl object-cover w-full;
+    aspect-ratio: 1;
+  }
+
+  .remove-img-form {
+    @apply absolute top-1 right-1;
+  }
+
+  .btn-remove-img {
+    @apply bg-red-600 text-white rounded-full w-6 h-6 text-xs flex items-center justify-center cursor-pointer border-0 hover:bg-red-500 transition-colors;
+  }
+
 </style>

@@ -23,10 +23,10 @@ const games = data ?? [];
         <div class="projects-grid">
             {games.map(game => (
                 <ProjectCard 
+                    id={game.id}
                     title={game.title} 
                     description={game.description} 
                     image={game.image} 
-                    link={game.link} 
                 />
             ))}
         </div>
