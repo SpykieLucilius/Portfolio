@@ -9,4 +9,5 @@ export interface Project {
   created_at: string;
   detail_description?: string;
   detail_images?: string[];
+  project_date?: number;
 }

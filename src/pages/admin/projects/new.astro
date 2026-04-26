@@ -50,7 +50,8 @@ for (const file of detailImageFiles) {
     category: form.get('category'),
     display_order: Number(form.get('display_order')) || 0,
     detail_description: form.get('detail_description') || null,
-    detail_images: detailImageUrls
+    detail_images: detailImageUrls,
+    project_date: Number(form.get('project_date')) || null
   });
 
   return Astro.redirect('/admin/projects');
@@ -104,6 +105,11 @@ for (const file of detailImageFiles) {
           <input class="field-input field-short" type="number" name="display_order" value="0" min="0" />
         </div>
         
+        <div class="field">
+          <label class="field-label">Project Date</label>
+          <input class="field-input" type="number" name="project_date" placeholder="YYYYMMDD" />
+        </div>
+
         <div class="field">
           <label class="field-label">Detail Description</label>
           <textarea class="field-input field-textarea field-textarea-tall" name="detail_description"></textarea>
