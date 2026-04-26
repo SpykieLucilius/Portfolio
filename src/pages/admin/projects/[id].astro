@@ -82,6 +82,7 @@ if (Astro.request.method === 'POST') {
     display_order: Number(form.get('display_order')) || 0,
     detail_description: form.get('detail_description') || null,
     detail_images: finalDetailImages,
+    project_date: Number(form.get('project_date')) || null
   }).eq('id', id);
 
   return Astro.redirect('/admin/projects');
@@ -167,6 +168,11 @@ if (!project) return Astro.redirect('/admin/projects');
         <div class="field">
           <label class="field-label">Detail Description</label>
           <textarea class="field-input field-textarea field-textarea-tall" name="detail_description">{project.detail_description}</textarea>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Project Date</label>
+          <input class="field-input" type="number" name="project_date" value={project.project_date} placeholder="YYYY" />
         </div>
 
         <div class="field">

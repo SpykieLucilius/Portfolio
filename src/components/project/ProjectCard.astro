@@ -4,9 +4,10 @@ interface Props {
     title: string;
     description?: string;
     image?: string;
+    project_date?: number;
 }
 
-const { id, title, description, image } = Astro.props;
+const { id, title, description, image, project_date } = Astro.props;
 ---
 
 <a href={`/projects/${id}`} class="projectCard">
@@ -15,6 +16,7 @@ const { id, title, description, image } = Astro.props;
         style={image ? `background-image: url('${image}')` : ''}
     ></div>
     
+    {project_date && <p class="projectDate">{project_date}</p>}
     <div class="contentOverlay">
         <h3 class="projectTitle">{title}</h3>
         {description && <p class="projectDescription">{description}</p>}
@@ -60,5 +62,12 @@ const { id, title, description, image } = Astro.props;
         font-family: 'Roboto Mono', monospace;
         max-width: 90%;
   
+    }
+
+    .projectDate {
+        @apply absolute top-4 right-4 m-0 text-xs text-white z-20 px-2 py-1 rounded-lg;
+        font-family: 'Roboto Mono', monospace;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
     }
 </style>
