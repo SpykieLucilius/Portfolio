@@ -2,6 +2,7 @@
 import Layout from "../../layouts/Layout.astro";
 import Navbar from '../../components/navbar/Navbar.astro';
 import { supabase } from '../../lib/supabase';
+import { marked } from 'marked';
 
 const { id } = Astro.params;
 if (!id) return Astro.redirect('/');
@@ -15,6 +16,10 @@ const { data: project } = await supabase
 if (!project) return Astro.redirect('/');
 
 const displayDescription = project.detail_description || project.description || null;
+
+const descriptionHtml = displayDescription 
+    ? await marked.parse(displayDescription)
+    : null;
 ---
 
 <Layout>
@@ -37,7 +42,7 @@ const displayDescription = project.detail_description || project.description || 
             )}
 
             {displayDescription ? (
-                <p class="detail-description">{displayDescription}</p>
+                <div class="detail-description" set:html={descriptionHtml}/>
             ) : (
                 <p class="detail-empty">No description available.</p>
             )}
@@ -106,10 +111,55 @@ const displayDescription = project.detail_description || project.description || 
     }
 
     .detail-description {
-        @apply text-gray-700 text-base leading-relaxed whitespace-pre-line;
+        @apply text-gray-700 text-base leading-relaxed;
         font-family: 'Roboto Mono', monospace;
         max-width: 72ch;
     }
+
+    .detail-description :global(h1),
+    .detail-description :global(h2),
+    .detail-description :global(h3) {
+        @apply font-bold text-gray-900 mt-6 mb-2;
+        letter-spacing: 0.04em;
+    }
+    .detail-description :global(h1) { @apply text-xl; }
+    .detail-description :global(h2) { @apply text-lg; }
+    .detail-description :global(h3) { @apply text-base; }
+
+    .detail-description :global(p) { @apply mb-4; }
+
+    .detail-description :global(ul),
+    .detail-description :global(ol) { @apply pl-6 mb-4; }
+    .detail-description :global(ul) { @apply list-disc; }
+    .detail-description :global(ol) { @apply list-decimal; }
+    .detail-description :global(li) { @apply mb-1; }
+
+    .detail-description :global(code) {
+        @apply bg-gray-100 text-gray-800 rounded px-1 py-0.5 text-sm;
+    }
+
+    .detail-description :global(pre) {
+        @apply bg-gray-100 rounded-xl p-4 overflow-x-auto mb-4;
+        border: 1px solid rgba(0, 0, 0, 0.07);
+    }
+    .detail-description :global(pre code) {
+        @apply bg-transparent p-0;
+    }
+
+    .detail-description :global(a) {
+        @apply text-gray-900 underline hover:text-gray-500 transition-colors;
+    }
+
+    .detail-description :global(blockquote) {
+        @apply border-l-4 border-gray-300 pl-4 italic text-gray-500 mb-4;
+    }
+
+    .detail-description :global(hr) {
+        @apply border-gray-200 my-6;
+    }
+
+    .detail-description :global(strong) { @apply text-gray-900 font-bold; }
+    .detail-description :global(em) { @apply italic; }
 
     .detail-empty {
         @apply text-gray-400 text-sm italic;
