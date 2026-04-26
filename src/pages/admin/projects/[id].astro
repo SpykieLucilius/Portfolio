@@ -294,7 +294,7 @@ if (!project) return Astro.redirect('/admin/projects');
   }
 
   .gallery-admin-grid {
-    @apply grid grid-cols-3 gap-3 mb-3;
+    @apply flex flex-wrap gap-3 mb-3;
   }
 
   .gallery-admin-item {
@@ -302,8 +302,9 @@ if (!project) return Astro.redirect('/admin/projects');
   }
 
   .gallery-admin-thumb {
-    @apply rounded-xl object-cover w-full;
-    aspect-ratio: 1;
+    @apply rounded-xl object-cover;
+    width: 100px;
+    height: 100px;
   }
 
   .remove-img-form {
