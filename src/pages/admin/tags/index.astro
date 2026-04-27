@@ -1,0 +1,146 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import Navbar from '../../../components/navbar/Navbar.astro';
+import { supabaseAdmin } from '../../../lib/supabase';
+
+if (Astro.request.method === 'POST') {
+  const form = await Astro.request.formData();
+  const action = form.get('_action');
+
+  if (action === 'create') {
+    const name = (form.get('name') as string)?.trim();
+    if (name) await supabaseAdmin.from('tags').insert({ name });
+  }
+
+  if (action === 'rename') {
+    const id = form.get('id') as string;
+    const name = (form.get('name') as string)?.trim();
+    if (id && name) await supabaseAdmin.from('tags').update({ name }).eq('id', id);
+  }
+
+  if (action === 'delete') {
+    const id = form.get('id') as string;
+    if (id) await supabaseAdmin.from('tags').delete().eq('id', id);
+  }
+
+  return Astro.redirect('/admin/tags');
+}
+
+const { data: tags } = await supabaseAdmin.from('tags').select('*').order('name');
+---
+
+<Layout title="Admin — Tags">
+  <Navbar />
+  <section class="admin-section">
+    <div class="admin-header">
+      <h1 class="admin-title">Tags</h1>
+      <a href="/admin/projects" class="btn-back">← Projects</a>
+    </div>
+
+    <div class="form-card create-card">
+      <form method="POST" class="create-form">
+        <input type="hidden" name="_action" value="create" />
+        <input class="field-input" type="text" name="name" placeholder="New tag name" required />
+        <button class="btn-primary" type="submit">+ Add</button>
+      </form>
+    </div>
+
+    <div class="tag-list">
+      {(tags ?? []).length === 0 && (
+        <div class="empty-state">No tags yet.</div>
+      )}
+      {(tags ?? []).map(tag => (
+        <div class="tag-row">
+          <form method="POST" class="rename-form">
+            <input type="hidden" name="_action" value="rename" />
+            <input type="hidden" name="id" value={tag.id} />
+            <input class="field-input tag-input" type="text" name="name" value={tag.name} required />
+            <button class="btn-save" type="submit">Save</button>
+          </form>
+          <form method="POST" onsubmit="return confirm('Delete this tag? It will be removed from all projects.')">
+            <input type="hidden" name="_action" value="delete" />
+            <input type="hidden" name="id" value={tag.id} />
+            <button class="btn-delete" type="submit">Delete</button>
+          </form>
+        </div>
+      ))}
+    </div>
+  </section>
+</Layout>
+
+<style>
+  @reference "../../../styles/global.css";
+
+  .admin-section {
+    @apply flex flex-col flex-1 mt-4 pb-6 w-11/12 mx-auto overflow-y-auto;
+  }
+
+  .admin-header {
+    @apply flex items-center justify-between mb-6;
+  }
+
+  .admin-title {
+    @apply text-black font-bold;
+    font-size: 200%;
+    font-family: 'Roboto Mono', monospace;
+  }
+
+  .btn-back {
+    @apply text-gray-400 hover:text-gray-900 transition-colors;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 90%;
+    text-decoration: none;
+  }
+
+  .form-card {
+    @apply bg-gray-900 rounded-2xl p-6 mb-4;
+  }
+
+  .create-form {
+    @apply flex gap-3 items-center;
+  }
+
+  .field-input {
+    @apply bg-gray-800 text-white rounded-xl px-4 py-3 outline-none border border-gray-700 focus:border-gray-400 transition-colors flex-1;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 95%;
+  }
+
+  .btn-primary {
+    @apply bg-white text-gray-900 font-bold rounded-xl px-5 py-3 hover:bg-gray-200 transition-colors cursor-pointer border-0 shrink-0;
+    font-family: 'Roboto Mono', monospace;
+  }
+
+  .tag-list {
+    @apply flex flex-col gap-3;
+  }
+
+  .tag-row {
+    @apply bg-gray-900 rounded-2xl px-6 py-4 flex items-center gap-3;
+  }
+
+  .rename-form {
+    @apply flex items-center gap-3 flex-1;
+  }
+
+  .tag-input {
+    @apply flex-1;
+  }
+
+  .btn-save {
+    @apply bg-gray-700 text-white rounded-xl px-4 py-2 hover:bg-gray-600 transition-colors cursor-pointer border-0 shrink-0;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 85%;
+  }
+
+  .btn-delete {
+    @apply bg-transparent text-red-500 border border-red-500 rounded-xl px-4 py-2 hover:bg-red-500 hover:text-white transition-colors cursor-pointer shrink-0;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 85%;
+  }
+
+  .empty-state {
+    @apply bg-gray-900 rounded-2xl p-10 text-center text-gray-400;
+    font-family: 'Roboto Mono', monospace;
+  }
+</style>

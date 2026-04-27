@@ -91,6 +91,14 @@ if (Astro.request.method === 'POST') {
     project_date: Number(form.get('project_date')) || null
   }).eq('id', id);
 
+  const selectedTagIds = form.getAll('tags') as string[];
+  await supabaseAdmin.from('project_tags').delete().eq('project_id', id);
+  if (selectedTagIds.length > 0) {
+    await supabaseAdmin.from('project_tags').insert(
+      selectedTagIds.map(tagId => ({ project_id: id, tag_id: tagId }))
+    );
+  }
+
   return Astro.redirect('/admin/projects');
 }
 
@@ -101,6 +109,10 @@ const { data: project } = await supabaseAdmin
   .single();
 
 if (!project) return Astro.redirect('/admin/projects');
+
+const { data: tags } = await supabaseAdmin.from('tags').select('*').order('name');
+const { data: projectTags } = await supabaseAdmin.from('project_tags').select('tag_id').eq('project_id', id);
+const currentTagIds = new Set((projectTags ?? []).map(pt => pt.tag_id));
 ---
 
 <Layout title="Edit Project">
@@ -192,6 +204,19 @@ if (!project) return Astro.redirect('/admin/projects');
           <span class="field-hint">New uploads are appended to the gallery above.</span>
         </div>
 
+        <div class="field">
+          <label class="field-label">Tags</label>
+          <div class="tags-list" id="tags-list">
+            {(tags ?? []).map(tag => (
+              <label class="tag-option">
+                <input type="checkbox" name="tags" value={tag.id} checked={currentTagIds.has(tag.id)} />
+                {tag.name}
+              </label>
+            ))}
+          </div>
+          <input class="field-input new-tag-input" type="text" id="new-tag-input" placeholder="New tag... (press Enter to create)" autocomplete="off" />
+        </div>
+
         <div class="form-actions">
           <button class="btn-primary" type="submit">Save changes</button>
           <a href="/admin/projects" class="btn-cancel">Cancel</a>
@@ -244,6 +269,36 @@ if (!project) return Astro.redirect('/admin/projects');
       reorderForm.submit();
     });
   }
+</script>
+
+<script>
+  const newTagInput = document.getElementById('new-tag-input') as HTMLInputElement | null;
+  const tagsList = document.getElementById('tags-list');
+
+  newTagInput?.addEventListener('keydown', async (e) => {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    const name = newTagInput.value.trim();
+    if (!name) return;
+
+    const res = await fetch('/api/tags/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+    });
+
+    if (res.ok) {
+      const tag = await res.json();
+      const label = document.createElement('label');
+      label.className = 'tag-option';
+      label.innerHTML = `<input type="checkbox" name="tags" value="${tag.id}" checked /> ${tag.name}`;
+      tagsList?.appendChild(label);
+      newTagInput.value = '';
+    } else {
+      const { error } = await res.json();
+      alert(error ?? 'Failed to create tag');
+    }
+  });
 </script>
 
 </Layout>
@@ -398,6 +453,24 @@ if (!project) return Astro.redirect('/admin/projects');
     @apply bg-green-700 text-white font-bold rounded-xl px-5 py-2 hover:bg-green-600 transition-colors cursor-pointer border-0 mt-2;
     font-family: 'Roboto Mono', monospace;
     font-size: 90%;
+  }
+
+  .tags-list {
+    @apply flex flex-wrap gap-3;
+  }
+
+  .tag-option {
+    @apply flex items-center gap-2 text-white text-sm cursor-pointer;
+    font-family: 'Roboto Mono', monospace;
+  }
+
+  .tag-option input[type="checkbox"] {
+    @apply accent-white w-4 h-4 cursor-pointer;
+  }
+
+  .new-tag-input {
+    @apply mt-2;
+    max-width: 320px;
   }
 
 </style>

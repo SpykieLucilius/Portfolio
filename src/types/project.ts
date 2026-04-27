@@ -10,4 +10,5 @@ export interface Project {
   detail_description?: string;
   detail_images?: string[];
   project_date?: number;
+  tags?: string[];
 }
