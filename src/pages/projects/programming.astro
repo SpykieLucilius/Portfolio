@@ -13,33 +13,39 @@ const programmingProjects = data ?? [];
 ---
 
 <Layout>
-    <Navbar />
-    <section class ="programmingprojects">
-        
-        <h1 class="Title">
-            Programming
-        </h1>
+    <div class="page-container">
+        <Navbar />
+        <section class ="programmingprojects">
+            
+            <h1 class="Title">
+                Programming
+            </h1>
 
-        <div class="projects-grid">
-            {programmingProjects.map(project => (
-                <ProjectCard 
-                    id={project.id}
-                    title={project.title} 
-                    description={project.description} 
-                    image={project.image}
-                    project_date={project.project_date} 
-                />
-            ))}
-        </div>
+            <div class="projects-grid">
+                {programmingProjects.map(project => (
+                    <ProjectCard 
+                        id={project.id}
+                        title={project.title} 
+                        description={project.description} 
+                        image={project.image}
+                        project_date={project.project_date} 
+                    />
+                ))}
+            </div>
 
-    </section>
+        </section>
+    </div>
 </Layout>
 
 <style>
     @reference "../../styles/global.css";
 
+    .page-container {
+        @apply overflow-y-auto;
+    }
+
     .programmingprojects {
-        @apply flex flex-col flex-1 mt-4 pb-6 w-11/12 mx-auto overflow-y-auto px-4;
+        @apply flex flex-col flex-1 mt-4 pb-6 w-11/12 mx-auto;
     }
 
     .Title {

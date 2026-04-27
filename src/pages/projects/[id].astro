@@ -24,57 +24,63 @@ const descriptionHtml = displayDescription
 ---
 
 <Layout>
-    <Navbar />
-    <section class="detail-section">
+    <div class="page-container">
+        <Navbar />
+        <section class="detail-section">
 
-        <div class="detail-hero" style={project.image ? `background-image: url('${project.image}')` : ''}>
-            <div class="detail-hero-overlay">
-                <h1 class="detail-title">{project.title}</h1>
-                <span class="detail-category">{project.category}{project.project_date ? ` | ${project.project_date}` : ''}</span>
-            </div>
-        </div>
-
-        <div class="detail-body">
-
-            {project.link && (
-                <a href={project.link} target="_blank" rel="noopener noreferrer" class="btn-visit">
-                    Visit Project →
-                </a>
-            )}
-
-            {displayDescription ? (
-                <div class="detail-description" set:html={descriptionHtml}/>
-            ) : (
-                <p class="detail-empty">No description available.</p>
-            )}
-
-            {project.detail_images && project.detail_images.length > 0 && (
-                <div class="detail-gallery">
-                    {project.detail_images.map((url: string) => (
-                        <div class="gallery-frame" data-lightbox={url}>
-                            <img src={url} alt={project.title} class="gallery-image" />
-                        </div>
-                    ))}
+            <div class="detail-hero" style={project.image ? `background-image: url('${project.image}')` : ''}>
+                <div class="detail-hero-overlay">
+                    <h1 class="detail-title">{project.title}</h1>
+                    <span class="detail-category">{project.category}{project.project_date ? ` | ${project.project_date}` : ''}</span>
                 </div>
-            )}
+            </div>
 
+            <div class="detail-body">
+
+                {project.link && (
+                    <a href={project.link} target="_blank" rel="noopener noreferrer" class="btn-visit">
+                        Visit Project →
+                    </a>
+                )}
+
+                {displayDescription ? (
+                    <div class="detail-description" set:html={descriptionHtml}/>
+                ) : (
+                    <p class="detail-empty">No description available.</p>
+                )}
+
+                {project.detail_images && project.detail_images.length > 0 && (
+                    <div class="detail-gallery">
+                        {project.detail_images.map((url: string) => (
+                            <div class="gallery-frame" data-lightbox={url}>
+                                <img src={url} alt={project.title} class="gallery-image" />
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+            </div>
+
+            <a href={`/projects/${project.category}`} class="btn-back">← Back to {project.category}</a>
+
+        </section>
+
+        <div id="lightbox" class="lightbox">
+            <button id="lightbox-close" class="lightbox-close">✕</button>
+            <img id="lightbox-img" src="" alt="" class="lightbox-img" />
         </div>
-
-        <a href={`/projects/${project.category}`} class="btn-back">← Back to {project.category}</a>
-
-    </section>
-
-    <div id="lightbox" class="lightbox">
-        <button id="lightbox-close" class="lightbox-close">✕</button>
-        <img id="lightbox-img" src="" alt="" class="lightbox-img" />
     </div>
 </Layout>
 
 <style>
     @reference "../../styles/global.css";
 
+    .page-container {
+        @apply overflow-y-auto;
+    }
+
     .detail-section {
-        @apply flex flex-col flex-1 pb-10 w-11/12 mx-auto overflow-y-auto;
+        @apply flex flex-col flex-1 pb-10 w-11/12 mx-auto ;
     }
 
     .detail-hero {

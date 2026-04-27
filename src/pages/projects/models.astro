@@ -13,33 +13,39 @@ const models = data ?? [];
 ---
 
 <Layout>
-    <Navbar />
-    <section class ="modelsprojects">
-        
-        <h1 class="Title">
-            Models
-        </h1>
+    <div class="page-container">
+        <Navbar />
+        <section class ="modelsprojects">
+            
+            <h1 class="Title">
+                Models
+            </h1>
 
-        <div class="projects-grid">
-            {models.map(model => (
-                <ProjectCard 
-                    id={model.id}
-                    title={model.title} 
-                    description={model.description} 
-                    image={model.image} 
-                    project_date={model.project_date}
-                />
-            ))}
-        </div>
+            <div class="projects-grid">
+                {models.map(model => (
+                    <ProjectCard 
+                        id={model.id}
+                        title={model.title} 
+                        description={model.description} 
+                        image={model.image} 
+                        project_date={model.project_date}
+                    />
+                ))}
+            </div>
 
-    </section>
+        </section>
+    </div>
 </Layout>
 
 <style>
     @reference "../../styles/global.css";
 
+    .page-container {
+        @apply overflow-y-auto;
+    }
+
     .modelsprojects {
-        @apply flex flex-col flex-1 mt-4 pb-6 w-11/12 mx-auto overflow-y-auto px-4;
+        @apply flex flex-col flex-1 mt-4 pb-6 w-11/12 mx-auto;
     }
 
     .Title {

@@ -13,32 +13,38 @@ const games = data ?? [];
 ---
 
 <Layout>
-    <Navbar />
-    <section class ="gameprojects">
+    <div class="page-container">
+        <Navbar />
+        <section class ="gameprojects">
 
-        <h1 class="Title">
-            Games
-        </h1>
+            <h1 class="Title">
+                Games
+            </h1>
 
-        <div class="projects-grid">
-            {games.map(game => (
-                <ProjectCard 
-                    id={game.id}
-                    title={game.title} 
-                    description={game.description} 
-                    image={game.image} 
-                    project_date={game.project_date}
-                />
-            ))}
-        </div>
-    </section>
+            <div class="projects-grid">
+                {games.map(game => (
+                    <ProjectCard 
+                        id={game.id}
+                        title={game.title} 
+                        description={game.description} 
+                        image={game.image} 
+                        project_date={game.project_date}
+                    />
+                ))}
+            </div>
+        </section>
+    </div>
 </Layout>
 
 <style>
     @reference "../../styles/global.css";
 
+    .page-container {
+        @apply overflow-y-auto;
+    }
+
     .gameprojects {
-        @apply flex flex-col flex-1 mt-4 pb-6 w-11/12 mx-auto overflow-y-auto px-4;
+        @apply flex flex-col flex-1 mt-4 pb-6 w-11/12 mx-auto;
     }
 
     .Title {
