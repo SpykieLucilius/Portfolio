@@ -27,6 +27,12 @@ if (Astro.request.method === 'POST') {
     return Astro.redirect(`/admin/projects/${id}`);
   }
 
+  if (action === 'reorder_images') {
+    const newOrder = JSON.parse(form.get('new_order') as string) as string[];
+    await supabaseAdmin.from('projects').update({ detail_images: newOrder }).eq('id', id);
+    return Astro.redirect(`/admin/projects/${id}`);
+  }
+
 
   let imageUrl = form.get('current_image') as string | null;
   const imageFile = form.get('image_file') as File;
@@ -107,10 +113,10 @@ if (!project) return Astro.redirect('/admin/projects');
 
     {project.detail_images && project.detail_images.length > 0 && (
       <div class="gallery-section">
-        <p class="gallery-section-label">Current Gallery</p>
-        <div class="gallery-admin-grid">
+        <p class="gallery-section-label">Current Gallery <span class="gallery-drag-hint">— drag to reorder</span></p>
+        <div class="gallery-admin-grid" id="gallery-grid">
           {project.detail_images.map((url: string) => (
-            <div class="gallery-admin-item">
+            <div class="gallery-admin-item" draggable="true" data-url={url}>
               <img src={url} alt="Gallery image" class="gallery-admin-thumb" />
               <form method="POST" class="remove-img-form" onsubmit="return confirm('Remove this image?')">
                 <input type="hidden" name="_action" value="remove_detail_image" />
@@ -120,6 +126,11 @@ if (!project) return Astro.redirect('/admin/projects');
             </div>
           ))}
         </div>
+        <form method="POST" id="reorder-form">
+          <input type="hidden" name="_action" value="reorder_images" />
+          <input type="hidden" name="new_order" id="new-order-input" />
+          <button type="button" class="btn-save-order" id="save-order-btn" style="display:none">Save Order</button>
+        </form>
       </div>
     )}
 
@@ -193,6 +204,48 @@ if (!project) return Astro.redirect('/admin/projects');
       <button class="btn-danger" type="submit">Delete project</button>
     </form>
   </section>
+<script>
+  const grid = document.getElementById('gallery-grid') as HTMLElement | null;
+  const saveBtn = document.getElementById('save-order-btn') as HTMLButtonElement | null;
+  const newOrderInput = document.getElementById('new-order-input') as HTMLInputElement | null;
+  const reorderForm = document.getElementById('reorder-form') as HTMLFormElement | null;
+
+  if (grid && saveBtn && newOrderInput && reorderForm) {
+    let dragSrc: HTMLElement | null = null;
+
+    grid.addEventListener('dragstart', (e) => {
+      dragSrc = (e.target as HTMLElement).closest('.gallery-admin-item');
+      if (dragSrc) dragSrc.classList.add('dragging');
+    });
+
+    grid.addEventListener('dragend', () => {
+      grid.querySelectorAll('.gallery-admin-item').forEach(el => {
+        el.classList.remove('dragging', 'drag-over');
+      });
+    });
+
+    grid.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      const target = (e.target as HTMLElement).closest('.gallery-admin-item') as HTMLElement | null;
+      if (!target || target === dragSrc) return;
+      const rect = target.getBoundingClientRect();
+      if ((e as DragEvent).clientX < rect.left + rect.width / 2) {
+        grid.insertBefore(dragSrc!, target);
+      } else {
+        grid.insertBefore(dragSrc!, target.nextSibling);
+      }
+      saveBtn.style.display = '';
+    });
+
+    saveBtn.addEventListener('click', () => {
+      const items = grid.querySelectorAll('.gallery-admin-item');
+      const order = Array.from(items).map(el => (el as HTMLElement).dataset.url!);
+      newOrderInput.value = JSON.stringify(order);
+      reorderForm.submit();
+    });
+  }
+</script>
+
 </Layout>
 
 <style>
@@ -319,6 +372,32 @@ if (!project) return Astro.redirect('/admin/projects');
 
   .btn-remove-img {
     @apply bg-red-600 text-white rounded-full w-6 h-6 text-xs flex items-center justify-center cursor-pointer border-0 hover:bg-red-500 transition-colors;
+  }
+
+  .gallery-drag-hint {
+    @apply text-gray-600 normal-case tracking-normal;
+    font-size: 85%;
+  }
+
+  .gallery-admin-item[draggable="true"] {
+    cursor: grab;
+  }
+
+  .gallery-admin-item.dragging {
+    opacity: 0.4;
+    outline: 2px dashed #6b7280;
+    border-radius: 0.75rem;
+  }
+
+  .gallery-admin-item.drag-over {
+    outline: 2px solid #fff;
+    border-radius: 0.75rem;
+  }
+
+  .btn-save-order {
+    @apply bg-green-700 text-white font-bold rounded-xl px-5 py-2 hover:bg-green-600 transition-colors cursor-pointer border-0 mt-2;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 90%;
   }
 
 </style>
