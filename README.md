@@ -2,6 +2,11 @@
 
 Personal portfolio website for showcasing projects across games, art, 3D models, security, programming, and more.
 
+## Deployment
+The site is deployed on [Vercel](https://vercel.com) with a custom domain. The backend uses Supabase for database and storage, and the frontend is built with Astro.
+
+website: [https://www.lucasmartins.ch](https://www.lucasmartins.ch)
+
 ## Tech Stack
 
 - **Framework:** [Astro](https://astro.build) (SSR mode)
