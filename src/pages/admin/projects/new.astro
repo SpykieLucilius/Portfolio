@@ -42,7 +42,7 @@ for (const file of detailImageFiles) {
   }
 }
 
-  await supabaseAdmin.from('projects').insert({
+  const { data: newProject } = await supabaseAdmin.from('projects').insert({
     title: form.get('title'),
     description: form.get('description'),
     image: imageUrl,
@@ -52,10 +52,19 @@ for (const file of detailImageFiles) {
     detail_description: form.get('detail_description') || null,
     detail_images: detailImageUrls,
     project_date: Number(form.get('project_date')) || null
-  });
+  }).select('id').single();
+
+  const selectedTagIds = form.getAll('tags') as string[];
+  if (newProject && selectedTagIds.length > 0) {
+    await supabaseAdmin.from('project_tags').insert(
+      selectedTagIds.map(tagId => ({ project_id: newProject.id, tag_id: tagId }))
+    );
+  }
 
   return Astro.redirect('/admin/projects');
 }
+
+const { data: tags } = await supabaseAdmin.from('tags').select('*').order('name');
 ---
 
 <Layout title="New Project">
@@ -120,6 +129,19 @@ for (const file of detailImageFiles) {
           <label class="field-label">Gallery Images</label>
           <input class="field-file" type="file" name="detail_image_files" accept="image/*" multiple />
           <span class="field-hint">Select multiple files to create a gallery.</span>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Tags</label>
+          <div class="tags-list" id="tags-list">
+            {(tags ?? []).map(tag => (
+              <label class="tag-option">
+                <input type="checkbox" name="tags" value={tag.id} />
+                {tag.name}
+              </label>
+            ))}
+          </div>
+          <input class="field-input new-tag-input" type="text" id="new-tag-input" placeholder="New tag... (press Enter to create)" autocomplete="off" />
         </div>
 
         <div class="form-actions">
@@ -189,6 +211,24 @@ for (const file of detailImageFiles) {
   min-height: 200px;
   }
 
+  .tags-list {
+    @apply flex flex-wrap gap-3;
+  }
+
+  .tag-option {
+    @apply flex items-center gap-2 text-white text-sm cursor-pointer;
+    font-family: 'Roboto Mono', monospace;
+  }
+
+  .tag-option input[type="checkbox"] {
+    @apply accent-white w-4 h-4 cursor-pointer;
+  }
+
+  .new-tag-input {
+    @apply mt-2;
+    max-width: 320px;
+  }
+
   .form-actions {
     @apply flex items-center gap-4 mt-2;
   }
@@ -205,3 +245,33 @@ for (const file of detailImageFiles) {
     text-decoration: none;
   }
 </style>
+
+<script>
+  const newTagInput = document.getElementById('new-tag-input') as HTMLInputElement | null;
+  const tagsList = document.getElementById('tags-list');
+
+  newTagInput?.addEventListener('keydown', async (e) => {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    const name = newTagInput.value.trim();
+    if (!name) return;
+
+    const res = await fetch('/api/tags/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+    });
+
+    if (res.ok) {
+      const tag = await res.json();
+      const label = document.createElement('label');
+      label.className = 'tag-option';
+      label.innerHTML = `<input type="checkbox" name="tags" value="${tag.id}" checked /> ${tag.name}`;
+      tagsList?.appendChild(label);
+      newTagInput.value = '';
+    } else {
+      const { error } = await res.json();
+      alert(error ?? 'Failed to create tag');
+    }
+  });
+</script>

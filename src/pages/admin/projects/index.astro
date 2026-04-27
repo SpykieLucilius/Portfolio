@@ -18,7 +18,10 @@ const projects = data ?? [];
   <section class="admin-section">
     <div class="admin-header">
       <h1 class="admin-title">Projects</h1>
-      <a href="/admin/projects/new" class="btn-new">+ New project</a>
+      <div class="header-actions">
+        <a href="/admin/tags" class="btn-tags">Manage tags</a>
+        <a href="/admin/projects/new" class="btn-new">+ New project</a>
+      </div>
     </div>
 
     {projects.length === 0 && (
@@ -59,6 +62,17 @@ const projects = data ?? [];
     @apply text-black font-bold;
     font-size: 200%;
     font-family: 'Roboto Mono', monospace;
+  }
+
+  .header-actions {
+    @apply flex items-center gap-3;
+  }
+
+  .btn-tags {
+    @apply bg-transparent text-gray-500 border border-gray-300 rounded-xl px-5 py-2 hover:border-gray-500 hover:text-gray-900 transition-colors;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 90%;
+    text-decoration: none;
   }
 
   .btn-new {

@@ -9,11 +9,13 @@ if (!id) return Astro.redirect('/');
 
 const { data: project } = await supabase
     .from('projects')
-    .select('*')
+    .select('*, project_tags(tags(id, name))')
     .eq('id', id)
     .single();
 
 if (!project) return Astro.redirect('/');
+
+const tags = (project.project_tags ?? []).map((pt: any) => pt.tags).filter(Boolean);
 
 const displayDescription = project.detail_description || project.description || null;
 
@@ -32,6 +34,13 @@ const descriptionHtml = displayDescription
                 <div class="detail-hero-overlay">
                     <h1 class="detail-title">{project.title}</h1>
                     <span class="detail-category">{project.category}{project.project_date ? ` | ${project.project_date}` : ''}</span>
+                    {tags.length > 0 && (
+                        <div class="detail-tags">
+                            {tags.map((tag: { id: string; name: string }) => (
+                                <span class="detail-tag">{tag.name}</span>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -80,7 +89,7 @@ const descriptionHtml = displayDescription
     }
 
     .detail-section {
-        @apply flex flex-col flex-1 pb-10 w-11/12 mx-auto ;
+        @apply flex flex-col flex-1 pb-10 w-11/12 mx-auto;
     }
 
     .detail-hero {
@@ -222,6 +231,17 @@ const descriptionHtml = displayDescription
         @apply self-start text-gray-500 hover:text-gray-900 transition-colors mt-4 text-sm;
         font-family: 'Roboto Mono', monospace;
         text-decoration: none;
+    }
+
+    .detail-tags {
+        @apply flex flex-wrap gap-2 mt-3;
+    }
+
+    .detail-tag {
+        @apply text-xs uppercase tracking-widest text-gray-300 rounded-full px-3 py-1;
+        font-family: 'Roboto Mono', monospace;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.15);
     }
 </style>
 
