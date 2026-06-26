@@ -99,6 +99,14 @@ if (Astro.request.method === 'POST') {
     );
   }
 
+  const selectedTechIds = form.getAll('technologies') as string[];
+  await supabaseAdmin.from('project_technologies').delete().eq('project_id', id);
+  if (selectedTechIds.length > 0) {
+    await supabaseAdmin.from('project_technologies').insert(
+      selectedTechIds.map(techId => ({ project_id: id, technology_id: techId }))
+    );
+  }
+
   return Astro.redirect('/admin/projects');
 }
 
@@ -112,7 +120,11 @@ if (!project) return Astro.redirect('/admin/projects');
 
 const { data: tags } = await supabaseAdmin.from('tags').select('*').order('name');
 const { data: projectTags } = await supabaseAdmin.from('project_tags').select('tag_id').eq('project_id', id);
-const currentTagIds = new Set((projectTags ?? []).map(pt => pt.tag_id));
+const currentTagIds = new Set((projectTags ?? []).map((pt: { tag_id: string }) => pt.tag_id));
+
+const { data: technologies } = await supabaseAdmin.from('technologies').select('*').order('name');
+const { data: projectTechs } = await supabaseAdmin.from('project_technologies').select('technology_id').eq('project_id', id);
+const currentTechIds = new Set((projectTechs ?? []).map((pt: { technology_id: string }) => pt.technology_id));
 ---
 
 <Layout title="Edit Project">
@@ -207,7 +219,7 @@ const currentTagIds = new Set((projectTags ?? []).map(pt => pt.tag_id));
         <div class="field">
           <label class="field-label">Tags</label>
           <div class="tags-list" id="tags-list">
-            {(tags ?? []).map(tag => (
+            {(tags ?? []).map((tag: { id: string; name: string }) => (
               <label class="tag-option">
                 <input type="checkbox" name="tags" value={tag.id} checked={currentTagIds.has(tag.id)} />
                 {tag.name}
@@ -215,6 +227,24 @@ const currentTagIds = new Set((projectTags ?? []).map(pt => pt.tag_id));
             ))}
           </div>
           <input class="field-input new-tag-input" type="text" id="new-tag-input" placeholder="New tag... (press Enter to create)" autocomplete="off" />
+        </div>
+
+        <div class="field">
+          <label class="field-label">Tech Stack</label>
+          <div class="tags-list" id="tech-list">
+            {(technologies ?? []).map((tech: { id: string; name: string; icon_url?: string }) => (
+              <label class="tag-option">
+                <input type="checkbox" name="technologies" value={tech.id} checked={currentTechIds.has(tech.id)} />
+                {tech.name}
+              </label>
+            ))}
+          </div>
+          <div class="new-tech-row">
+            <input class="field-input new-tech-name" type="text" id="new-tech-name" placeholder="Name..." autocomplete="off" />
+            <input class="field-input new-tech-url" type="text" id="new-tech-url" placeholder="Icon URL (optional)" autocomplete="off" />
+            <button type="button" class="btn-add-tech" id="btn-add-tech">+ Add</button>
+          </div>
+          <a href="/admin/technologies" class="field-hint tech-link">Manage all technologies →</a>
         </div>
 
         <div class="form-actions">
@@ -298,6 +328,42 @@ const currentTagIds = new Set((projectTags ?? []).map(pt => pt.tag_id));
       const { error } = await res.json();
       alert(error ?? 'Failed to create tag');
     }
+  });
+</script>
+
+<script>
+  const newTechName = document.getElementById('new-tech-name') as HTMLInputElement | null;
+  const newTechUrl = document.getElementById('new-tech-url') as HTMLInputElement | null;
+  const btnAddTech = document.getElementById('btn-add-tech');
+  const techList = document.getElementById('tech-list');
+
+  async function createTech() {
+    const name = newTechName?.value.trim();
+    if (!name) return;
+
+    const res = await fetch('/api/technologies/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, icon_url: newTechUrl?.value.trim() || null }),
+    });
+
+    if (res.ok) {
+      const tech = await res.json();
+      const label = document.createElement('label');
+      label.className = 'tag-option';
+      label.innerHTML = `<input type="checkbox" name="technologies" value="${tech.id}" checked /> ${tech.name}`;
+      techList?.appendChild(label);
+      if (newTechName) newTechName.value = '';
+      if (newTechUrl) newTechUrl.value = '';
+    } else {
+      const { error } = await res.json();
+      alert(error ?? 'Failed to create technology');
+    }
+  }
+
+  btnAddTech?.addEventListener('click', createTech);
+  newTechName?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); createTech(); }
   });
 </script>
 
@@ -471,6 +537,30 @@ const currentTagIds = new Set((projectTags ?? []).map(pt => pt.tag_id));
   .new-tag-input {
     @apply mt-2;
     max-width: 320px;
+  }
+
+  .new-tech-row {
+    @apply flex gap-2 items-center mt-2;
+  }
+
+  .new-tech-name {
+    max-width: 180px;
+  }
+
+  .new-tech-url {
+    flex: 1;
+    max-width: 360px;
+  }
+
+  .btn-add-tech {
+    @apply bg-gray-700 text-white rounded-xl px-4 py-3 hover:bg-gray-600 transition-colors cursor-pointer border-0 shrink-0;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 88%;
+  }
+
+  .tech-link {
+    @apply text-gray-500 hover:text-gray-300 transition-colors mt-1;
+    text-decoration: none;
   }
 
 </style>

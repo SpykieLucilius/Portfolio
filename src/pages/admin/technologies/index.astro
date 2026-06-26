@@ -1,0 +1,204 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import Navbar from '../../../components/navbar/Navbar.astro';
+import { supabaseAdmin } from '../../../lib/supabase';
+
+if (Astro.request.method === 'POST') {
+  const form = await Astro.request.formData();
+  const action = form.get('_action');
+
+  if (action === 'create') {
+    const name = (form.get('name') as string)?.trim();
+    const icon_url = (form.get('icon_url') as string)?.trim() || null;
+    if (name) await supabaseAdmin.from('technologies').insert({ name, icon_url });
+  }
+
+  if (action === 'update') {
+    const id = form.get('id') as string;
+    const name = (form.get('name') as string)?.trim();
+    const icon_url = (form.get('icon_url') as string)?.trim() || null;
+    if (id && name) await supabaseAdmin.from('technologies').update({ name, icon_url }).eq('id', id);
+  }
+
+  if (action === 'delete') {
+    const id = form.get('id') as string;
+    if (id) await supabaseAdmin.from('technologies').delete().eq('id', id);
+  }
+
+  return Astro.redirect('/admin/technologies');
+}
+
+const { data: technologies } = await supabaseAdmin.from('technologies').select('*').order('name');
+---
+
+<Layout title="Admin — Technologies">
+  <Navbar />
+  <section class="admin-section">
+    <div class="admin-header">
+      <h1 class="admin-title">Technologies</h1>
+      <a href="/admin/projects" class="btn-back">← Projects</a>
+    </div>
+
+    <div class="form-card create-card">
+      <form method="POST" class="create-form">
+        <input type="hidden" name="_action" value="create" />
+        <input class="field-input" type="text" name="name" placeholder="Name (e.g. React)" required autocomplete="off" />
+        <input class="field-input field-url" type="text" name="icon_url" placeholder="Icon URL (e.g. https://cdn.simpleicons.org/react)" autocomplete="off" />
+        <button class="btn-primary" type="submit">+ Add</button>
+      </form>
+      <p class="url-hint">
+        Icon URLs: <a href="https://simpleicons.org" target="_blank" rel="noopener" class="hint-link">simpleicons.org</a> → use <code>https://cdn.simpleicons.org/slug</code>
+        &nbsp;·&nbsp; <a href="https://devicon.dev" target="_blank" rel="noopener" class="hint-link">devicon.dev</a> → copy the &lt;img&gt; src
+      </p>
+    </div>
+
+    <div class="tech-list">
+      {(technologies ?? []).length === 0 && (
+        <div class="empty-state">No technologies yet.</div>
+      )}
+      {(technologies ?? []).map(tech => (
+        <div class="tech-row">
+          <div class="tech-preview">
+            {tech.icon_url ? (
+              <img src={tech.icon_url} alt={tech.name} class="tech-thumb" />
+            ) : (
+              <span class="tech-initials">{tech.name.slice(0, 2).toUpperCase()}</span>
+            )}
+          </div>
+          <form method="POST" class="update-form">
+            <input type="hidden" name="_action" value="update" />
+            <input type="hidden" name="id" value={tech.id} />
+            <input class="field-input tech-name-input" type="text" name="name" value={tech.name} required />
+            <input class="field-input tech-url-input" type="text" name="icon_url" value={tech.icon_url ?? ''} placeholder="Icon URL" />
+            <button class="btn-save" type="submit">Save</button>
+          </form>
+          <form method="POST" onsubmit="return confirm('Delete this technology? It will be removed from all projects.')">
+            <input type="hidden" name="_action" value="delete" />
+            <input type="hidden" name="id" value={tech.id} />
+            <button class="btn-delete" type="submit">Delete</button>
+          </form>
+        </div>
+      ))}
+    </div>
+  </section>
+</Layout>
+
+<style>
+  @reference "../../../styles/global.css";
+
+  .admin-section {
+    @apply flex flex-col flex-1 mt-4 pb-6 w-11/12 mx-auto overflow-y-auto;
+  }
+
+  .admin-header {
+    @apply flex items-center justify-between mb-6;
+  }
+
+  .admin-title {
+    @apply text-black font-bold;
+    font-size: 200%;
+    font-family: 'Roboto Mono', monospace;
+  }
+
+  .btn-back {
+    @apply text-gray-400 hover:text-gray-900 transition-colors;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 90%;
+    text-decoration: none;
+  }
+
+  .form-card {
+    @apply bg-gray-900 rounded-2xl p-6 mb-4;
+  }
+
+  .create-form {
+    @apply flex gap-3 items-center;
+  }
+
+  .field-input {
+    @apply bg-gray-800 text-white rounded-xl px-4 py-3 outline-none border border-gray-700 focus:border-gray-400 transition-colors;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 95%;
+  }
+
+  .field-url {
+    flex: 2;
+  }
+
+  .url-hint {
+    @apply text-gray-500 text-xs mt-3;
+    font-family: 'Roboto Mono', monospace;
+  }
+
+  .hint-link {
+    @apply text-gray-400 hover:text-white transition-colors;
+    text-decoration: underline;
+  }
+
+  .url-hint code {
+    @apply bg-gray-800 text-gray-300 rounded px-1 py-0.5;
+    font-family: 'Roboto Mono', monospace;
+  }
+
+  .btn-primary {
+    @apply bg-white text-gray-900 font-bold rounded-xl px-5 py-3 hover:bg-gray-200 transition-colors cursor-pointer border-0 shrink-0;
+    font-family: 'Roboto Mono', monospace;
+  }
+
+  .tech-list {
+    @apply flex flex-col gap-3;
+  }
+
+  .tech-row {
+    @apply bg-gray-900 rounded-2xl px-5 py-4 flex items-center gap-4;
+  }
+
+  .tech-preview {
+    @apply flex items-center justify-center rounded-xl bg-gray-800 shrink-0;
+    width: 44px;
+    height: 44px;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .tech-thumb {
+    @apply object-contain rounded-lg;
+    width: 28px;
+    height: 28px;
+  }
+
+  .tech-initials {
+    @apply text-gray-400 font-bold text-sm;
+    font-family: 'Roboto Mono', monospace;
+  }
+
+  .update-form {
+    @apply flex items-center gap-3 flex-1;
+  }
+
+  .tech-name-input {
+    width: 160px;
+    flex-shrink: 0;
+  }
+
+  .tech-url-input {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .btn-save {
+    @apply bg-gray-700 text-white rounded-xl px-4 py-2 hover:bg-gray-600 transition-colors cursor-pointer border-0 shrink-0;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 85%;
+  }
+
+  .btn-delete {
+    @apply bg-transparent text-red-500 border border-red-500 rounded-xl px-4 py-2 hover:bg-red-500 hover:text-white transition-colors cursor-pointer shrink-0;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 85%;
+  }
+
+  .empty-state {
+    @apply bg-gray-900 rounded-2xl p-10 text-center text-gray-400;
+    font-family: 'Roboto Mono', monospace;
+  }
+</style>
