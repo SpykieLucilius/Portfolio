@@ -1,6 +1,7 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import Navbar from '../../components/navbar/Navbar.astro';
+import TechStack from '../../components/project/TechStack.astro';
 import { supabase } from '../../lib/supabase';
 import { marked } from 'marked';
 
@@ -9,17 +10,18 @@ if (!id) return Astro.redirect('/');
 
 const { data: project } = await supabase
     .from('projects')
-    .select('*, project_tags(tags(id, name))')
+    .select('*, project_tags(tags(id, name)), project_technologies(technologies(id, name, icon_url))')
     .eq('id', id)
     .single();
 
 if (!project) return Astro.redirect('/');
 
 const tags = (project.project_tags ?? []).map((pt: any) => pt.tags).filter(Boolean);
+const technologies = (project.project_technologies ?? []).map((pt: any) => pt.technologies).filter(Boolean);
 
 const displayDescription = project.detail_description || project.description || null;
 
-const descriptionHtml = displayDescription 
+const descriptionHtml = displayDescription
     ? await marked.parse(displayDescription)
     : null;
 
@@ -53,21 +55,25 @@ const descriptionHtml = displayDescription
 
             <div class="detail-body">
 
-                {displayDescription ? (
-                    <div class="detail-description" set:html={descriptionHtml}/>
-                ) : (
-                    <p class="detail-empty">No description available.</p>
-                )}
+                <div class="detail-main">
+                    {displayDescription ? (
+                        <div class="detail-description" set:html={descriptionHtml}/>
+                    ) : (
+                        <p class="detail-empty">No description available.</p>
+                    )}
 
-                {project.detail_images && project.detail_images.length > 0 && (
-                    <div class="detail-gallery">
-                        {project.detail_images.map((url: string) => (
-                            <div class="gallery-frame" data-lightbox={url}>
-                                <img src={url} alt={project.title} class="gallery-image" />
-                            </div>
-                        ))}
-                    </div>
-                )}
+                    {project.detail_images && project.detail_images.length > 0 && (
+                        <div class="detail-gallery">
+                            {project.detail_images.map((url: string) => (
+                                <div class="gallery-frame" data-lightbox={url}>
+                                    <img src={url} alt={project.title} class="gallery-image" />
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                <TechStack technologies={technologies} />
 
             </div>
 
@@ -118,7 +124,12 @@ const descriptionHtml = displayDescription
     }
 
     .detail-body {
-        @apply flex flex-col gap-6 mt-8;
+        @apply flex gap-10 mt-8 items-start;
+    }
+
+    .detail-main {
+        @apply flex flex-col gap-6 flex-1;
+        min-width: 0;
     }
 
     .btn-visit {

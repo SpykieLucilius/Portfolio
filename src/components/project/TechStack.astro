@@ -1,0 +1,95 @@
+---
+import type { Technology } from '../../types/technology';
+
+interface Props {
+  technologies: Technology[];
+}
+
+const { technologies } = Astro.props;
+---
+
+{technologies.length > 0 && (
+  <aside class="tech-panel">
+    <span class="tech-label">Tech Stack</span>
+    <div class="tech-grid">
+      {technologies.map(tech => (
+        <div class="tech-item" data-name={tech.name}>
+          {tech.icon_url ? (
+            <img src={tech.icon_url} alt={tech.name} class="tech-icon" />
+          ) : (
+            <span class="tech-initials">{tech.name.slice(0, 2).toUpperCase()}</span>
+          )}
+        </div>
+      ))}
+    </div>
+  </aside>
+)}
+
+<style>
+  @reference "../../styles/global.css";
+
+  .tech-panel {
+    @apply flex flex-col gap-5;
+    width: 220px;
+    flex-shrink: 0;
+  }
+
+  .tech-label {
+    @apply text-sm font-bold text-gray-500 uppercase tracking-widest;
+    font-family: 'Roboto Mono', monospace;
+  }
+
+  .tech-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 64px);
+    gap: 12px;
+  }
+
+  .tech-item {
+    @apply relative flex items-center justify-center rounded-2xl bg-gray-100 cursor-default select-none;
+    width: 64px;
+    height: 64px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .tech-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+  }
+
+  .tech-item::after {
+    content: attr(data-name);
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(17, 24, 39, 0.92);
+    color: #fff;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 7px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
+    z-index: 20;
+  }
+
+  .tech-item:hover::after {
+    opacity: 1;
+  }
+
+  .tech-icon {
+    @apply object-contain;
+    width: 38px;
+    height: 38px;
+  }
+
+  .tech-initials {
+    @apply text-gray-500 font-bold;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 15px;
+  }
+</style>
